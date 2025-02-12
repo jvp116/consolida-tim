@@ -1,0 +1,34 @@
+### REGRAS CONSOLIDAR FATURA TIM BLACK
+
+# PADRÃO PLANILHA DE SAÍDA
+# Conta Contábil | Subconta/Entidade | Fundo | Código Departamento | Restrição | Valor Líquido | Envio de Aviso | Histórico
+
+# Conta Contábil
+    # Preencher com 1135001 para código/subconta até 999.
+    # Preencher com 2136001 para código/subconta de 4 ou 6 dígitos (exemplo: 9111 ou 101321).
+    # Preencher com 4121090 para código/subconta acima de 600000000.
+    # Preencher com "Funcionário não encontrado" se o código for 0.
+
+# Subconta/Entidade
+    # Sempre que Conta Contábil for 2136001, o código/subconta deve ser 101321.
+    # Sempre que Conta Contábil for 4121090, o código/subconta deve ser em branco.
+
+# Fundo
+    # Preencher sempre com 10.
+
+# Código Departamento
+    # Preencher com 600000101 para código/subconta com 1, 2, 3, 4 ou 6 dígitos.
+    # Para os demais casos, preencher com o próprio código/subconta.
+
+# Restrição
+    # Quando Conta Contábil iniciar com 1 ou 2, a restrição é 0a.
+    # Quando Conta Contábil iniciar com 3 ou 4, a restrição é 0e.
+
+# Envio de Aviso
+    # Preencher com "true" quando Conta Contábil for 2136001.
+    # Preencher com "false" nos demais casos.
+
+# Histórico
+    # Preencher com "Adto. Salário Fatura TIM <MM/AAAA> - <Respectivo Número>" para código/subconta com até 3 dígitos.
+    # Preencher com "<Código> - Fatura TIM <MM/AAAA> - <Nome Funcionário> - <Respectivo Número>" para código/subconta com 4 ou 6 dígitos.
+    # Preencher com "Despesas Fatura TIM <MM/AAAA> - <Respectivo Número>" para código/subconta maior que 600000000.
