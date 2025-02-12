@@ -141,7 +141,6 @@ def select_tb():
 # Configuração da janela principal usando ttkthemes
 root = ThemedTk(theme="plastik")
 root.title("Consolidação de Fatura TIM")
-root.iconbitmap("logo-iatec.ico")
 root.geometry("600x200")
 
 # Create main container frame with padding
