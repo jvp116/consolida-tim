@@ -1,9 +1,7 @@
-import os
-from datetime import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from ttkthemes import ThemedTk
-import tkinter.ttk as ttk
+import os
+from datetime import datetime
 from utils import (
     extrair_dados_planilha,
     determinar_conta_contabil,
@@ -138,36 +136,37 @@ def select_tb():
         entry_tb.delete(0, tk.END)
         entry_tb.insert(0, file_path)
 
-# Configuração da janela principal usando ttkthemes
-root = ThemedTk(theme="plastik")
-root.title("Consolidação de Fatura TIM")
-root.geometry("600x200")
+# Configuração da janela principal com TKinterModernThemes
+root = tk.Tk()
 
-# Create main container frame with padding
-main_frame = ttk.Frame(root)
+root.title("Consolidação de Fatura TIM")
+root.geometry("600x200")  # Adjusted size for modern layout
+
+# Create a main container frame with padding
+main_frame = tk.Frame(root, bg=root["bg"])
 main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-# Modern interface with same components using ttk:
-label_func = ttk.Label(main_frame, text="Planilha Funcionários:")
+# Modern interface with same components:
+label_func = tk.Label(main_frame, text="Planilha Funcionários:")
 label_func.grid(row=0, column=0, pady=5, padx=5, sticky="e")
-entry_func = ttk.Entry(main_frame, width=50)
+entry_func = tk.Entry(main_frame, width=50)
 entry_func.grid(row=0, column=1, pady=5, padx=5)
-btn_func = ttk.Button(main_frame, text="Selecionar", command=select_func)
+btn_func = tk.Button(main_frame, text="Selecionar", command=select_func)
 btn_func.grid(row=0, column=2, pady=5, padx=5)
 
-label_tb = ttk.Label(main_frame, text="Planilha TIM Black:")
+label_tb = tk.Label(main_frame, text="Planilha TIM Black:")
 label_tb.grid(row=1, column=0, pady=5, padx=5, sticky="e")
-entry_tb = ttk.Entry(main_frame, width=50)
+entry_tb = tk.Entry(main_frame, width=50)
 entry_tb.grid(row=1, column=1, pady=5, padx=5)
-btn_tb = ttk.Button(main_frame, text="Selecionar", command=select_tb)
+btn_tb = tk.Button(main_frame, text="Selecionar", command=select_tb)
 btn_tb.grid(row=1, column=2, pady=5, padx=5)
 
-label_mes_ano = ttk.Label(main_frame, text="Mês/Ano (MM/AAAA):")
+label_mes_ano = tk.Label(main_frame, text="Mês/Ano (MM/AAAA):")
 label_mes_ano.grid(row=2, column=0, pady=5, padx=5, sticky="e")
-entry_mes_ano = ttk.Entry(main_frame, width=50)
+entry_mes_ano = tk.Entry(main_frame, width=50)
 entry_mes_ano.grid(row=2, column=1, pady=5, padx=5)
 
-btn_consolidar = ttk.Button(main_frame, text="Consolidar", command=consolidate)
+btn_consolidar = tk.Button(main_frame, text="Consolidar", command=consolidate)
 btn_consolidar.grid(row=3, column=1, pady=15)
 
 root.mainloop()
