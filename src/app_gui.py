@@ -1,31 +1,25 @@
-import tkinter as tk
-from tkinter import filedialog, messagebox
 import os
+import tkinter as tk
 from datetime import datetime
-from utils import (
-    extrair_dados_planilha,
-    determinar_conta_contabil,
-    determinar_subconta_entidade,
-    determinar_codigo_departamento,
-    determinar_restricao,
-    determinar_envio_aviso,
-    determinar_historico
-)
+from tkinter import filedialog, messagebox
 
-def consolidate():
+from tim.black.consolidate import consolidate as consolidate_black
+from tim.empresa_nacional.consolidate import \
+    consolidate as consolidate_empresa_nacional
+
+
+def init_consolidate():
     planilha_func = entry_func.get()
-    planilha_tb = entry_tb.get()
+    planilha_fatura_tim = entry_fatura_tim.get()
     mes_ano = entry_mes_ano.get()
     
-    # Valida os caminhos dos arquivos
     if not os.path.isfile(planilha_func):
         messagebox.showerror("Erro", "Planilha de Funcionários não encontrada.")
         return
-    if not os.path.isfile(planilha_tb):
-        messagebox.showerror("Erro", "Planilha TIM Black não encontrada.")
+    if not os.path.isfile(planilha_fatura_tim):
+        messagebox.showerror("Erro", "Planilha TIM não encontrada.")
         return
     
-    # Valida o formato do mês/ano e extrai mes e ano
     try:
         mes_str, ano_str = mes_ano.split('/')
         mes = int(mes_str)
@@ -38,87 +32,18 @@ def consolidate():
         messagebox.showerror("Erro", "Formato de mês/ano inválido. Use MM/AAAA.")
         return
 
+    plano = plano_var.get()
     try:
-        # Carrega dados da planilha de Funcionários
-        df_func = extrair_dados_planilha(
-            planilha_func, "TIM BLACK", ["Cód", "Nome", "Número", "Auxílio"], "Número"
-        )
-        # Tratar valores nulos na coluna "Auxílio"
-        df_func["Auxílio"] = df_func["Auxílio"].fillna(0)
-        
-        # Carrega dados da planilha TIM Black
-        df_tb = extrair_dados_planilha(
-            planilha_tb, "Resumo Detalhamento", ["Acesso", "Valor"]
-        )
-
-        # Agrupa os dados da planilha TIM Black por "Acesso"
-        df_grouped = df_tb.groupby("Acesso", as_index=False).sum()
-
-        # Junção com os dados de Funcionários (df_func) utilizando "Acesso" e o índice "Número" dos funcionários
-        df_pre_consolida = df_grouped.merge(
-            df_func, left_on="Acesso", right_index=True, how="left"
-        )
-
-        # Renomear colunas conforme a lógica de consolidação
-        df_pre_consolida.rename(
-            columns={
-                "Cód": "Subconta/Entidade",
-                "Acesso": "Número",
-                "Valor": "Valor Bruto",
-                "Auxílio": "Valor Auxílio"
-            },
-            inplace=True
-        )
-
-        # Preencher valores ausentes
-        df_pre_consolida.fillna({
-            "Subconta/Entidade": 0,
-            "Nome": "Funcionário não encontrado",
-            "Valor Auxílio": 0
-        }, inplace=True)
-
-        # Calcular valor líquido
-        df_pre_consolida["Valor Líquido"] = df_pre_consolida["Valor Bruto"] - df_pre_consolida["Valor Auxílio"]
-
-        # Filtrar apenas os registros com valor líquido positivo
-        df_pre_consolida = df_pre_consolida[df_pre_consolida["Valor Líquido"] > 0]
-
-        # Converter Subconta/Entidade para inteiro e ordenar
-        df_pre_consolida["Subconta/Entidade"] = df_pre_consolida["Subconta/Entidade"].astype(int)
-        df_pre_consolida = df_pre_consolida.sort_values(by="Subconta/Entidade")
-
-        # Aplicar as funções para criar as colunas adicionais
-        df_pre_consolida["Conta Contábil"] = df_pre_consolida["Subconta/Entidade"].apply(determinar_conta_contabil)
-        df_pre_consolida["Código Departamento"] = df_pre_consolida["Subconta/Entidade"].apply(determinar_codigo_departamento)
-        df_pre_consolida["Histórico"] = df_pre_consolida.apply(
-            lambda row: determinar_historico(row["Subconta/Entidade"], row["Número"], row["Nome"], mes, ano), axis=1
-        )
-        df_pre_consolida["Subconta/Entidade"] = df_pre_consolida.apply(
-            lambda row: determinar_subconta_entidade(row["Conta Contábil"], row["Subconta/Entidade"]), axis=1
-        )
-        df_pre_consolida["Fundo"] = 10
-        df_pre_consolida["Restrição"] = df_pre_consolida["Conta Contábil"].apply(determinar_restricao)
-        df_pre_consolida["Envio de Aviso"] = df_pre_consolida["Conta Contábil"].apply(determinar_envio_aviso)
-
-        # Selecionar colunas na ordem correta
-        df_final = df_pre_consolida[[
-            "Conta Contábil", "Subconta/Entidade", "Fundo", "Código Departamento",
-            "Restrição", "Valor Líquido", "Envio de Aviso", "Histórico"
-        ]]
-
-        # Perguntar ao usuário onde deseja salvar o arquivo consolidado
-        output_file = filedialog.asksaveasfilename(
-            defaultextension='.xlsx', 
-            filetypes=[("Excel Files", "*.xlsx")], 
-            title="Salvar Consolidação"
-        )
-        if output_file:
-            df_final.to_excel(output_file, index=False, engine="openpyxl")
-            messagebox.showinfo("Sucesso", f"Consolidação realizada com sucesso e salva em: {output_file}")
+        if plano == "TIM BLACK":
+            consolidate_black(planilha_func, planilha_fatura_tim, mes, ano)
+        elif plano == "TIM EMPRESA NACIONAL":
+            consolidate_empresa_nacional(planilha_func, planilha_fatura_tim, mes, ano)
+        else:
+            messagebox.showerror("Erro", "Plano inválido selecionado.")
     except Exception as e:
         messagebox.showerror("Erro", f"Erro durante consolidação: {str(e)}")
 
-def select_func():
+def select_funcionario():
     file_path = filedialog.askopenfilename(
         filetypes=[("Excel Files", "*.xlsx")],
         title="Selecione a planilha de Funcionários"
@@ -127,46 +52,61 @@ def select_func():
         entry_func.delete(0, tk.END)
         entry_func.insert(0, file_path)
 
-def select_tb():
+def select_fatura_tim():
     file_path = filedialog.askopenfilename(
         filetypes=[("Excel Files", "*.xlsx")],
-        title="Selecione a planilha TIM Black"
+        title="Selecione a planilha da Fatura TIM"
     )
     if file_path:
-        entry_tb.delete(0, tk.END)
-        entry_tb.insert(0, file_path)
+        entry_fatura_tim.delete(0, tk.END)
+        entry_fatura_tim.insert(0, file_path)
 
-# Configuração da janela principal com TKinterModernThemes
 root = tk.Tk()
-
 root.title("Consolidação de Fatura TIM")
-root.geometry("600x200")  # Adjusted size for modern layout
+root.geometry("580x250")
 
-# Create a main container frame with padding
 main_frame = tk.Frame(root, bg=root["bg"])
 main_frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-# Modern interface with same components:
-label_func = tk.Label(main_frame, text="Planilha Funcionários:")
-label_func.grid(row=0, column=0, pady=5, padx=5, sticky="e")
-entry_func = tk.Entry(main_frame, width=50)
-entry_func.grid(row=0, column=1, pady=5, padx=5)
-btn_func = tk.Button(main_frame, text="Selecionar", command=select_func)
-btn_func.grid(row=0, column=2, pady=5, padx=5)
+plano_var = tk.StringVar(value="TIM BLACK")
+label_plano = tk.Label(main_frame, text="Selecione o plano:")
+label_plano.grid(row=0, column=0, pady=5, padx=5, sticky="e")
+frame_planos = tk.Frame(main_frame)
+frame_planos.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
-label_tb = tk.Label(main_frame, text="Planilha TIM Black:")
-label_tb.grid(row=1, column=0, pady=5, padx=5, sticky="e")
-entry_tb = tk.Entry(main_frame, width=50)
-entry_tb.grid(row=1, column=1, pady=5, padx=5)
-btn_tb = tk.Button(main_frame, text="Selecionar", command=select_tb)
-btn_tb.grid(row=1, column=2, pady=5, padx=5)
+radio_black = tk.Radiobutton(frame_planos, text="TIM BLACK", variable=plano_var, value="TIM BLACK")
+radio_black.pack(side="left", padx=5)
+
+radio_empresa = tk.Radiobutton(frame_planos, text="TIM EMPRESA NACIONAL", variable=plano_var, value="TIM EMPRESA NACIONAL")
+radio_empresa.pack(side="left", padx=5)
+
+label_func = tk.Label(main_frame, text="Planilha Funcionários:")
+label_func.grid(row=1, column=0, pady=5, padx=5, sticky="e")
+entry_func = tk.Entry(main_frame, width=50)
+entry_func.grid(row=1, column=1, pady=5, padx=5)
+btn_func = tk.Button(main_frame, text="Selecionar", command=select_funcionario)
+btn_func.grid(row=1, column=2, pady=5, padx=5)
+
+label_fat = tk.Label(main_frame, text="Planilha Fatura TIM:")
+label_fat.grid(row=2, column=0, pady=5, padx=5, sticky="e")
+entry_fatura_tim = tk.Entry(main_frame, width=50)
+entry_fatura_tim.grid(row=2, column=1, pady=5, padx=5)
+btn_fat = tk.Button(main_frame, text="Selecionar", command=select_fatura_tim)
+btn_fat.grid(row=2, column=2, pady=5, padx=5)
 
 label_mes_ano = tk.Label(main_frame, text="Mês/Ano (MM/AAAA):")
-label_mes_ano.grid(row=2, column=0, pady=5, padx=5, sticky="e")
+label_mes_ano.grid(row=3, column=0, pady=5, padx=5, sticky="e")
 entry_mes_ano = tk.Entry(main_frame, width=50)
-entry_mes_ano.grid(row=2, column=1, pady=5, padx=5)
+entry_mes_ano.grid(row=3, column=1, pady=5, padx=5)
 
-btn_consolidar = tk.Button(main_frame, text="Consolidar", command=consolidate)
-btn_consolidar.grid(row=3, column=1, pady=15)
+btn_consolidar = tk.Button(
+    main_frame,
+    text="Consolidar",
+    command=init_consolidate,
+    width=20,
+    height=2,
+    font=("Arial", 10, "bold")
+)
+btn_consolidar.grid(row=4, column=1, pady=15)
 
 root.mainloop()

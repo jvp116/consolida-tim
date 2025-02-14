@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def extrair_dados_planilha(caminho_arquivo, nome_aba, colunas_desejadas, indice=None):
     df = pd.read_excel(caminho_arquivo, sheet_name=nome_aba, usecols=colunas_desejadas)
     if indice and indice in df.columns:
