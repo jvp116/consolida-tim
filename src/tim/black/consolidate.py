@@ -45,6 +45,9 @@ def consolidate(planilha_func, planilha_fatura_tim, mes, ano):
             "Valor Auxílio": 0
         }, inplace=True)
 
+        # Convert "Valor Bruto" from text with comma separator to float
+        df_pre_consolida["Valor Bruto"] = df_pre_consolida["Valor Bruto"].astype(str).str.replace(",", ".").astype(float)
+        
         # Calcular valor líquido
         df_pre_consolida["Valor Líquido"] = df_pre_consolida["Valor Bruto"] - df_pre_consolida["Valor Auxílio"]
 
