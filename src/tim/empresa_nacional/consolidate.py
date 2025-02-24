@@ -19,6 +19,9 @@ def consolidate(planilha_func, planilha_fatura_tim, mes, ano):
             planilha_fatura_tim, "Resumo Detalhamento", ["Acesso", "Valor"]
         )
 
+        # Convert "Valor" from text with comma separator to float
+        df_tb["Valor"] = df_tb["Valor"].astype(str).str.replace(",", ".").astype(float)
+
         # Agrupa os dados da planilha por "Acesso"
         df_grouped = df_tb.groupby("Acesso", as_index=False).sum()
 
@@ -65,7 +68,6 @@ def consolidate(planilha_func, planilha_fatura_tim, mes, ano):
             "Restrição", "Valor", "Envio de Aviso", "Histórico"
         ]]
 
-        print(df_final)
         # Perguntar ao usuário onde deseja salvar o arquivo consolidado
         output_file = filedialog.asksaveasfilename(
             defaultextension='.xlsx', 
