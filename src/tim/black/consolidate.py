@@ -18,6 +18,9 @@ def consolidate(planilha_func, planilha_fatura_tim, mes, ano):
         df_fat = extrair_dados_planilha(
             planilha_fatura_tim, "Resumo Detalhamento", ["Acesso", "Valor"]
         )
+        
+        # Convert "Valor" from text with comma separator to float
+        df_fat["Valor"] = df_fat["Valor"].astype(str).str.replace(",", ".").astype(float)
 
         # Agrupa os dados da planilha por "Acesso"
         df_grouped = df_fat.groupby("Acesso", as_index=False).sum()
@@ -44,9 +47,6 @@ def consolidate(planilha_func, planilha_fatura_tim, mes, ano):
             "Nome/Depto": "Funcionário não encontrado",
             "Valor Auxílio": 0
         }, inplace=True)
-
-        # Convert "Valor Bruto" from text with comma separator to float
-        df_pre_consolida["Valor Bruto"] = df_pre_consolida["Valor Bruto"].astype(str).str.replace(",", ".").astype(float)
         
         # Calcular valor líquido
         df_pre_consolida["Valor Líquido"] = df_pre_consolida["Valor Bruto"] - df_pre_consolida["Valor Auxílio"]
